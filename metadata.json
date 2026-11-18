@@ -1,0 +1,6 @@
+{
+  "name": "Gym Fee Manager Pro",
+  "description": "Complete gym management, automatic monthly fee collection, WhatsApp reminders, bodybuilder progress tracking, attendance, trainers, workouts, diets, supplements, expenses, equipment, and reporting.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

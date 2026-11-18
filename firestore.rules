@@ -1,0 +1,432 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isOptStr(data, key, maxLen) {
+      return !(key in data) || (data[key] is string && data[key].size() <= maxLen);
+    }
+
+    function isOptInt(data, key, minVal, maxVal) {
+      return !(key in data) || (data[key] is int && data[key] >= minVal && data[key] <= maxVal);
+    }
+
+    function isOptNum(data, key, minVal, maxVal) {
+      return !(key in data) || ((data[key] is int || data[key] is float) && data[key] >= minVal && data[key] <= maxVal);
+    }
+
+    function isValidTimestampsCreate(data) {
+      return data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidTimestampsUpdate(data, oldData) {
+      return data.createdAt == oldData.createdAt &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidOwnerProfile(data, userId) {
+      return data.userId == userId &&
+             data.gymName is string && data.gymName.size() >= 1 && data.gymName.size() <= 100 &&
+             data.ownerName is string && data.ownerName.size() >= 1 && data.ownerName.size() <= 100 &&
+             data.ownerPhone is string && data.ownerPhone.size() <= 30 &&
+             data.language in ['en', 'ur'] &&
+             data.activeBranchId is string && data.activeBranchId.size() >= 1 && data.activeBranchId.size() <= 128 &&
+             isOptStr(data, 'email', 150) &&
+             isOptStr(data, 'twoFactorPin', 20);
+    }
+
+    function isValidBranch(data, userId) {
+      return data.userId == userId &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+             data.city is string && data.city.size() <= 80 &&
+             data.phone is string && data.phone.size() <= 30 &&
+             data.address is string && data.address.size() <= 250 &&
+             data.active is bool;
+    }
+
+    function isValidMember(data, userId) {
+      return data.userId == userId &&
+             data.membershipId is string && data.membershipId.size() >= 1 && data.membershipId.size() <= 40 &&
+             data.branchId is string && data.branchId.size() >= 1 && data.branchId.size() <= 128 &&
+             data.fullName is string && data.fullName.size() >= 1 && data.fullName.size() <= 100 &&
+             data.mobile is string && data.mobile.size() >= 3 && data.mobile.size() <= 30 &&
+             data.whatsapp is string && data.whatsapp.size() <= 30 &&
+             data.packageName is string && data.packageName.size() >= 1 && data.packageName.size() <= 80 &&
+             data.monthlyFee is int && data.monthlyFee >= 0 && data.monthlyFee <= 10000000 &&
+             data.pendingAmount is int && data.pendingAmount >= 0 && data.pendingAmount <= 10000000 &&
+             data.joiningDateMillis is int && data.joiningDateMillis > 0 &&
+             data.startDateMillis is int && data.startDateMillis > 0 &&
+             data.expiryDateMillis is int && data.expiryDateMillis > 0 &&
+             data.paidThroughMillis is int && data.paidThroughMillis > 0 &&
+             data.dueDayOfMonth is int && data.dueDayOfMonth >= 1 && data.dueDayOfMonth <= 31 &&
+             data.status in ['ACTIVE', 'EXPIRED', 'PAUSED'] &&
+             isOptStr(data, 'fatherName', 100) &&
+             isOptStr(data, 'cnic', 30) &&
+             isOptStr(data, 'emergencyContact', 30) &&
+             isOptStr(data, 'address', 250) &&
+             isOptStr(data, 'gender', 20) &&
+             isOptStr(data, 'dateOfBirth', 30) &&
+             isOptStr(data, 'bloodGroup', 12) &&
+             isOptInt(data, 'lastPaymentDateMillis', 0, 9999999999999) &&
+             isOptStr(data, 'trainerId', 128) &&
+             isOptStr(data, 'trainerName', 100) &&
+             isOptNum(data, 'heightCm', 0, 300) &&
+             isOptNum(data, 'weightKg', 0, 500) &&
+             isOptNum(data, 'bodyFatPercent', 0, 100) &&
+             isOptStr(data, 'fitnessGoal', 100) &&
+             (!( 'competitionPrep' in data ) || data.competitionPrep is bool) &&
+             isOptStr(data, 'photoWebpBase64', 150000) &&
+             isOptStr(data, 'cnicFrontBase64', 150000) &&
+             isOptStr(data, 'cnicBackBase64', 150000) &&
+             isOptStr(data, 'medicalCertBase64', 150000);
+    }
+
+    function isValidFeePayment(data, userId) {
+      return data.userId == userId &&
+             data.memberId is string && isValidId(data.memberId) &&
+             data.memberName is string && data.memberName.size() >= 1 && data.memberName.size() <= 100 &&
+             data.membershipId is string && data.membershipId.size() >= 1 && data.membershipId.size() <= 40 &&
+             data.branchId is string && data.branchId.size() >= 1 && data.branchId.size() <= 128 &&
+             data.amount is int && data.amount >= 0 && data.amount <= 10000000 &&
+             data.discount is int && data.discount >= 0 && data.discount <= 10000000 &&
+             data.paymentMethod is string && data.paymentMethod.size() >= 1 && data.paymentMethod.size() <= 40 &&
+             data.forMonthLabel is string && data.forMonthLabel.size() >= 1 && data.forMonthLabel.size() <= 40 &&
+             data.dueDateMillis is int && data.dueDateMillis > 0 &&
+             data.paidAtMillis is int && data.paidAtMillis > 0 &&
+             data.receiptNumber is string && data.receiptNumber.size() >= 1 && data.receiptNumber.size() <= 50 &&
+             isOptStr(data, 'notes', 300);
+    }
+
+    function isValidBodyLog(data, userId) {
+      return data.userId == userId &&
+             data.memberId is string && isValidId(data.memberId) &&
+             data.memberName is string && data.memberName.size() >= 1 && data.memberName.size() <= 100 &&
+             data.recordedAtMillis is int && data.recordedAtMillis > 0 &&
+             (data.weightKg is int || data.weightKg is float) && data.weightKg >= 0 && data.weightKg <= 500 &&
+             (data.bodyFatPercent is int || data.bodyFatPercent is float) && data.bodyFatPercent >= 0 && data.bodyFatPercent <= 100 &&
+             (data.muscleMassKg is int || data.muscleMassKg is float) && data.muscleMassKg >= 0 && data.muscleMassKg <= 300 &&
+             data.photoTag in ['BEFORE', 'AFTER', 'PROGRESS'] &&
+             isOptNum(data, 'chestCm', 0, 300) &&
+             isOptNum(data, 'waistCm', 0, 300) &&
+             isOptNum(data, 'armsCm', 0, 150) &&
+             isOptNum(data, 'thighsCm', 0, 200) &&
+             isOptStr(data, 'photoWebpBase64', 150000) &&
+             isOptStr(data, 'notes', 300);
+    }
+
+    function isValidAttendance(data, userId) {
+      return data.userId == userId &&
+             data.memberId is string && isValidId(data.memberId) &&
+             data.memberName is string && data.memberName.size() >= 1 && data.memberName.size() <= 100 &&
+             data.membershipId is string && data.membershipId.size() >= 1 && data.membershipId.size() <= 40 &&
+             data.branchId is string && data.branchId.size() >= 1 && data.branchId.size() <= 128 &&
+             data.method in ['QR', 'BARCODE', 'MANUAL', 'BIOMETRIC'] &&
+             data.checkInMillis is int && data.checkInMillis > 0 &&
+             data.dateKey is string && data.dateKey.size() == 10 &&
+             isOptInt(data, 'checkOutMillis', 0, 9999999999999);
+    }
+
+    function isValidTrainer(data, userId) {
+      return data.userId == userId &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+             data.mobile is string && data.mobile.size() >= 3 && data.mobile.size() <= 30 &&
+             data.salary is int && data.salary >= 0 && data.salary <= 10000000 &&
+             data.specialization is string && data.specialization.size() >= 1 && data.specialization.size() <= 100 &&
+             data.branchId is string && data.branchId.size() >= 1 && data.branchId.size() <= 128 &&
+             data.active is bool &&
+             data.attendanceDaysThisMonth is int && data.attendanceDaysThisMonth >= 0 && data.attendanceDaysThisMonth <= 31;
+    }
+
+    function isValidWorkoutPlan(data, userId) {
+      return data.userId == userId &&
+             data.dayCategory in ['CHEST', 'BACK', 'LEG', 'SHOULDER', 'ARM', 'ABS'] &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 100 &&
+             data.exercises is list && data.exercises.size() <= 25 &&
+             isOptStr(data, 'assignedMemberId', 128) &&
+             isOptStr(data, 'assignedMemberName', 100);
+    }
+
+    function isValidDietPlan(data, userId) {
+      return data.userId == userId &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 100 &&
+             data.goal is string && data.goal.size() >= 1 && data.goal.size() <= 100 &&
+             data.breakfast is string && data.breakfast.size() <= 500 &&
+             data.lunch is string && data.lunch.size() <= 500 &&
+             data.snacks is string && data.snacks.size() <= 500 &&
+             data.dinner is string && data.dinner.size() <= 500 &&
+             data.totalCalories is int && data.totalCalories >= 0 && data.totalCalories <= 20000 &&
+             data.totalProteinGrams is int && data.totalProteinGrams >= 0 && data.totalProteinGrams <= 1000 &&
+             isOptStr(data, 'assignedMemberId', 128) &&
+             isOptStr(data, 'assignedMemberName', 100);
+    }
+
+    function isValidSupplement(data, userId) {
+      return data.userId == userId &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+             data.category in ['WHEY_PROTEIN', 'MASS_GAINER', 'CREATINE', 'PRE_WORKOUT', 'OTHER'] &&
+             data.brand is string && data.brand.size() <= 80 &&
+             data.stockQty is int && data.stockQty >= 0 && data.stockQty <= 100000 &&
+             data.soldQty is int && data.soldQty >= 0 && data.soldQty <= 1000000 &&
+             data.unitPrice is int && data.unitPrice >= 0 && data.unitPrice <= 1000000 &&
+             data.expiryDateMillis is int && data.expiryDateMillis > 0 &&
+             data.branchId is string && data.branchId.size() >= 1 && data.branchId.size() <= 128;
+    }
+
+    function isValidExpense(data, userId) {
+      return data.userId == userId &&
+             data.category in ['RENT', 'ELECTRICITY', 'WATER', 'SALARIES', 'EQUIPMENT', 'MAINTENANCE', 'OTHER'] &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
+             data.amount is int && data.amount >= 0 && data.amount <= 100000000 &&
+             data.expenseDateMillis is int && data.expenseDateMillis > 0 &&
+             data.branchId is string && data.branchId.size() >= 1 && data.branchId.size() <= 128 &&
+             isOptStr(data, 'notes', 300);
+    }
+
+    function isValidEquipment(data, userId) {
+      return data.userId == userId &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+             data.category is string && data.category.size() <= 80 &&
+             data.purchaseDateMillis is int && data.purchaseDateMillis > 0 &&
+             data.cost is int && data.cost >= 0 && data.cost <= 100000000 &&
+             data.nextMaintenanceMillis is int && data.nextMaintenanceMillis > 0 &&
+             data.condition in ['EXCELLENT', 'GOOD', 'NEEDS_SERVICE', 'OUT_OF_ORDER'] &&
+             data.branchId is string && data.branchId.size() >= 1 && data.branchId.size() <= 128 &&
+             isOptStr(data, 'notes', 300);
+    }
+
+    function isValidAuditLog(data, userId) {
+      return data.userId == userId &&
+             data.action is string && data.action.size() >= 1 && data.action.size() <= 60 &&
+             data.actorEmail is string && data.actorEmail.size() <= 150 &&
+             data.details is string && data.details.size() <= 500 &&
+             data.timestampMillis is int && data.timestampMillis > 0;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(userId) &&
+                       incoming().keys().hasAll(['userId', 'gymName', 'ownerName', 'ownerPhone', 'language', 'activeBranchId', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'gymName', 'ownerName', 'ownerPhone', 'email', 'language', 'activeBranchId', 'twoFactorPin', 'createdAt', 'updatedAt']) &&
+                       isValidOwnerProfile(incoming(), userId) &&
+                       isValidTimestampsCreate(incoming());
+      allow update: if isOwner(userId) && isValidId(userId) &&
+                       incoming().userId == existing().userId &&
+                       isValidOwnerProfile(incoming(), userId) &&
+                       isValidTimestampsUpdate(incoming(), existing()) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['gymName', 'ownerName', 'ownerPhone', 'email', 'language', 'activeBranchId', 'twoFactorPin', 'updatedAt']);
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      match /branches/{branchId} {
+        allow get: if isOwner(userId) && isValidId(branchId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(branchId) &&
+                         incoming().keys().hasAll(['userId', 'name', 'city', 'phone', 'address', 'active', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'name', 'city', 'phone', 'address', 'active', 'createdAt', 'updatedAt']) &&
+                         isValidBranch(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(branchId) &&
+                         incoming().userId == existing().userId &&
+                         isValidBranch(incoming(), userId) &&
+                         isValidTimestampsUpdate(incoming(), existing()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'city', 'phone', 'address', 'active', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(branchId);
+      }
+
+      match /members/{memberId} {
+        allow get: if isOwner(userId) && isValidId(memberId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(memberId) &&
+                         incoming().keys().hasAll(['userId', 'membershipId', 'branchId', 'fullName', 'mobile', 'whatsapp', 'packageName', 'monthlyFee', 'pendingAmount', 'joiningDateMillis', 'startDateMillis', 'expiryDateMillis', 'paidThroughMillis', 'dueDayOfMonth', 'status', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'membershipId', 'branchId', 'fullName', 'fatherName', 'cnic', 'mobile', 'whatsapp', 'emergencyContact', 'address', 'gender', 'dateOfBirth', 'bloodGroup', 'packageName', 'monthlyFee', 'pendingAmount', 'joiningDateMillis', 'startDateMillis', 'expiryDateMillis', 'paidThroughMillis', 'lastPaymentDateMillis', 'dueDayOfMonth', 'trainerId', 'trainerName', 'status', 'heightCm', 'weightKg', 'bodyFatPercent', 'fitnessGoal', 'competitionPrep', 'photoWebpBase64', 'cnicFrontBase64', 'cnicBackBase64', 'medicalCertBase64', 'createdAt', 'updatedAt']) &&
+                         isValidMember(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(memberId) &&
+                         incoming().userId == existing().userId &&
+                         isValidMember(incoming(), userId) &&
+                         isValidTimestampsUpdate(incoming(), existing()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['branchId', 'fullName', 'fatherName', 'cnic', 'mobile', 'whatsapp', 'emergencyContact', 'address', 'gender', 'dateOfBirth', 'bloodGroup', 'packageName', 'monthlyFee', 'pendingAmount', 'joiningDateMillis', 'startDateMillis', 'expiryDateMillis', 'paidThroughMillis', 'lastPaymentDateMillis', 'dueDayOfMonth', 'trainerId', 'trainerName', 'status', 'heightCm', 'weightKg', 'bodyFatPercent', 'fitnessGoal', 'competitionPrep', 'photoWebpBase64', 'cnicFrontBase64', 'cnicBackBase64', 'medicalCertBase64', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(memberId);
+      }
+
+      match /payments/{paymentId} {
+        allow get: if isOwner(userId) && isValidId(paymentId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(paymentId) &&
+                         incoming().keys().hasAll(['userId', 'memberId', 'memberName', 'membershipId', 'branchId', 'amount', 'discount', 'paymentMethod', 'forMonthLabel', 'dueDateMillis', 'paidAtMillis', 'receiptNumber', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'memberId', 'memberName', 'membershipId', 'branchId', 'amount', 'discount', 'paymentMethod', 'forMonthLabel', 'dueDateMillis', 'paidAtMillis', 'receiptNumber', 'notes', 'createdAt', 'updatedAt']) &&
+                         isValidFeePayment(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(paymentId) &&
+                         incoming().userId == existing().userId &&
+                         isValidFeePayment(incoming(), userId) &&
+                         isValidTimestampsUpdate(incoming(), existing()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['notes', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(paymentId);
+      }
+
+      match /bodyLogs/{logId} {
+        allow get: if isOwner(userId) && isValidId(logId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(logId) &&
+                         incoming().keys().hasAll(['userId', 'memberId', 'memberName', 'recordedAtMillis', 'weightKg', 'bodyFatPercent', 'muscleMassKg', 'photoTag', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'memberId', 'memberName', 'recordedAtMillis', 'weightKg', 'bodyFatPercent', 'muscleMassKg', 'chestCm', 'waistCm', 'armsCm', 'thighsCm', 'photoTag', 'photoWebpBase64', 'notes', 'createdAt', 'updatedAt']) &&
+                         isValidBodyLog(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(logId) &&
+                         incoming().userId == existing().userId &&
+                         isValidBodyLog(incoming(), userId) &&
+                         isValidTimestampsUpdate(incoming(), existing()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['weightKg', 'bodyFatPercent', 'muscleMassKg', 'chestCm', 'waistCm', 'armsCm', 'thighsCm', 'photoTag', 'photoWebpBase64', 'notes', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(logId);
+      }
+
+      match /attendance/{attendanceId} {
+        allow get: if isOwner(userId) && isValidId(attendanceId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(attendanceId) &&
+                         incoming().keys().hasAll(['userId', 'memberId', 'memberName', 'membershipId', 'branchId', 'method', 'checkInMillis', 'dateKey', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'memberId', 'memberName', 'membershipId', 'branchId', 'method', 'checkInMillis', 'checkOutMillis', 'dateKey', 'createdAt', 'updatedAt']) &&
+                         isValidAttendance(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(attendanceId) &&
+                         incoming().userId == existing().userId &&
+                         isValidAttendance(incoming(), userId) &&
+                         isValidTimestampsUpdate(incoming(), existing()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['checkOutMillis', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(attendanceId);
+      }
+
+      match /trainers/{trainerId} {
+        allow get: if isOwner(userId) && isValidId(trainerId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(trainerId) &&
+                         incoming().keys().hasAll(['userId', 'name', 'mobile', 'salary', 'specialization', 'branchId', 'active', 'attendanceDaysThisMonth', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'name', 'mobile', 'salary', 'specialization', 'branchId', 'active', 'attendanceDaysThisMonth', 'createdAt', 'updatedAt']) &&
+                         isValidTrainer(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(trainerId) &&
+                         incoming().userId == existing().userId &&
+                         isValidTrainer(incoming(), userId) &&
+                         isValidTimestampsUpdate(incoming(), existing()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'mobile', 'salary', 'specialization', 'branchId', 'active', 'attendanceDaysThisMonth', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(trainerId);
+      }
+
+      match /workoutPlans/{planId} {
+        allow get: if isOwner(userId) && isValidId(planId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(planId) &&
+                         incoming().keys().hasAll(['userId', 'dayCategory', 'title', 'exercises', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'dayCategory', 'title', 'assignedMemberId', 'assignedMemberName', 'exercises', 'createdAt', 'updatedAt']) &&
+                         isValidWorkoutPlan(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(planId) &&
+                         incoming().userId == existing().userId &&
+                         isValidWorkoutPlan(incoming(), userId) &&
+                         isValidTimestampsUpdate(incoming(), existing()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['dayCategory', 'title', 'assignedMemberId', 'assignedMemberName', 'exercises', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(planId);
+      }
+
+      match /dietPlans/{planId} {
+        allow get: if isOwner(userId) && isValidId(planId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(planId) &&
+                         incoming().keys().hasAll(['userId', 'title', 'goal', 'breakfast', 'lunch', 'snacks', 'dinner', 'totalCalories', 'totalProteinGrams', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'title', 'goal', 'assignedMemberId', 'assignedMemberName', 'breakfast', 'lunch', 'snacks', 'dinner', 'totalCalories', 'totalProteinGrams', 'createdAt', 'updatedAt']) &&
+                         isValidDietPlan(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(planId) &&
+                         incoming().userId == existing().userId &&
+                         isValidDietPlan(incoming(), userId) &&
+                         isValidTimestampsUpdate(incoming(), existing()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'goal', 'assignedMemberId', 'assignedMemberName', 'breakfast', 'lunch', 'snacks', 'dinner', 'totalCalories', 'totalProteinGrams', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(planId);
+      }
+
+      match /supplements/{supplementId} {
+        allow get: if isOwner(userId) && isValidId(supplementId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(supplementId) &&
+                         incoming().keys().hasAll(['userId', 'name', 'category', 'brand', 'stockQty', 'soldQty', 'unitPrice', 'expiryDateMillis', 'branchId', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'name', 'category', 'brand', 'stockQty', 'soldQty', 'unitPrice', 'expiryDateMillis', 'branchId', 'createdAt', 'updatedAt']) &&
+                         isValidSupplement(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(supplementId) &&
+                         incoming().userId == existing().userId &&
+                         isValidSupplement(incoming(), userId) &&
+                         isValidTimestampsUpdate(incoming(), existing()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'category', 'brand', 'stockQty', 'soldQty', 'unitPrice', 'expiryDateMillis', 'branchId', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(supplementId);
+      }
+
+      match /expenses/{expenseId} {
+        allow get: if isOwner(userId) && isValidId(expenseId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(expenseId) &&
+                         incoming().keys().hasAll(['userId', 'category', 'title', 'amount', 'expenseDateMillis', 'branchId', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'category', 'title', 'amount', 'expenseDateMillis', 'branchId', 'notes', 'createdAt', 'updatedAt']) &&
+                         isValidExpense(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(expenseId) &&
+                         incoming().userId == existing().userId &&
+                         isValidExpense(incoming(), userId) &&
+                         isValidTimestampsUpdate(incoming(), existing()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['category', 'title', 'amount', 'expenseDateMillis', 'branchId', 'notes', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(expenseId);
+      }
+
+      match /equipment/{equipmentId} {
+        allow get: if isOwner(userId) && isValidId(equipmentId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(equipmentId) &&
+                         incoming().keys().hasAll(['userId', 'name', 'category', 'purchaseDateMillis', 'cost', 'nextMaintenanceMillis', 'condition', 'branchId', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'name', 'category', 'purchaseDateMillis', 'cost', 'nextMaintenanceMillis', 'condition', 'branchId', 'notes', 'createdAt', 'updatedAt']) &&
+                         isValidEquipment(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if isOwner(userId) && isValidId(equipmentId) &&
+                         incoming().userId == existing().userId &&
+                         isValidEquipment(incoming(), userId) &&
+                         isValidTimestampsUpdate(incoming(), existing()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'category', 'purchaseDateMillis', 'cost', 'nextMaintenanceMillis', 'condition', 'branchId', 'notes', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(equipmentId);
+      }
+
+      match /auditLogs/{logId} {
+        allow get: if isOwner(userId) && isValidId(logId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(logId) &&
+                         incoming().keys().hasAll(['userId', 'action', 'actorEmail', 'details', 'timestampMillis', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'action', 'actorEmail', 'details', 'timestampMillis', 'createdAt', 'updatedAt']) &&
+                         isValidAuditLog(incoming(), userId) &&
+                         isValidTimestampsCreate(incoming());
+        allow update: if false;
+        allow delete: if isOwner(userId) && isValidId(logId);
+      }
+    }
+  }
+}

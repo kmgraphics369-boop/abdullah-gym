@@ -1,0 +1,327 @@
+{
+  "entities": {
+    "OwnerProfile": {
+      "title": "OwnerProfile",
+      "description": "Gym owner settings, branch preference, language, and security metadata.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "gymName": { "type": "string" },
+        "ownerName": { "type": "string" },
+        "ownerPhone": { "type": "string" },
+        "email": { "type": "string" },
+        "language": { "type": "string", "enum": ["en", "ur"] },
+        "activeBranchId": { "type": "string" },
+        "twoFactorPin": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "gymName", "ownerName", "ownerPhone", "language", "activeBranchId", "createdAt", "updatedAt"]
+    },
+    "Branch": {
+      "title": "Branch",
+      "description": "Gym branch location for multi-branch management.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "city": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "city", "phone", "address", "active", "createdAt", "updatedAt"]
+    },
+    "Member": {
+      "title": "Member",
+      "description": "Gym member profile with fee cycle, personal details, bodybuilder metrics, and WEBP image thumbnails.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "membershipId": { "type": "string" },
+        "branchId": { "type": "string" },
+        "fullName": { "type": "string" },
+        "fatherName": { "type": "string" },
+        "cnic": { "type": "string" },
+        "mobile": { "type": "string" },
+        "whatsapp": { "type": "string" },
+        "emergencyContact": { "type": "string" },
+        "address": { "type": "string" },
+        "gender": { "type": "string" },
+        "dateOfBirth": { "type": "string" },
+        "bloodGroup": { "type": "string" },
+        "packageName": { "type": "string" },
+        "monthlyFee": { "type": "integer" },
+        "pendingAmount": { "type": "integer" },
+        "joiningDateMillis": { "type": "integer" },
+        "startDateMillis": { "type": "integer" },
+        "expiryDateMillis": { "type": "integer" },
+        "paidThroughMillis": { "type": "integer" },
+        "lastPaymentDateMillis": { "type": "integer" },
+        "dueDayOfMonth": { "type": "integer" },
+        "trainerId": { "type": "string" },
+        "trainerName": { "type": "string" },
+        "status": { "type": "string", "enum": ["ACTIVE", "EXPIRED", "PAUSED"] },
+        "heightCm": { "type": "number" },
+        "weightKg": { "type": "number" },
+        "bodyFatPercent": { "type": "number" },
+        "fitnessGoal": { "type": "string" },
+        "competitionPrep": { "type": "boolean" },
+        "photoWebpBase64": { "type": "string" },
+        "cnicFrontBase64": { "type": "string" },
+        "cnicBackBase64": { "type": "string" },
+        "medicalCertBase64": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "membershipId", "branchId", "fullName", "mobile", "whatsapp", "packageName", "monthlyFee", "pendingAmount", "joiningDateMillis", "startDateMillis", "expiryDateMillis", "paidThroughMillis", "dueDayOfMonth", "status", "createdAt", "updatedAt"]
+    },
+    "FeePayment": {
+      "title": "FeePayment",
+      "description": "Membership fee collection transaction and receipt.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "memberId": { "type": "string" },
+        "memberName": { "type": "string" },
+        "membershipId": { "type": "string" },
+        "branchId": { "type": "string" },
+        "amount": { "type": "integer" },
+        "discount": { "type": "integer" },
+        "paymentMethod": { "type": "string" },
+        "forMonthLabel": { "type": "string" },
+        "dueDateMillis": { "type": "integer" },
+        "paidAtMillis": { "type": "integer" },
+        "receiptNumber": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "memberId", "memberName", "membershipId", "branchId", "amount", "discount", "paymentMethod", "forMonthLabel", "dueDateMillis", "paidAtMillis", "receiptNumber", "createdAt", "updatedAt"]
+    },
+    "BodyProgressLog": {
+      "title": "BodyProgressLog",
+      "description": "Bodybuilder measurements, weight, body fat, muscle mass, and progress photos.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "memberId": { "type": "string" },
+        "memberName": { "type": "string" },
+        "recordedAtMillis": { "type": "integer" },
+        "weightKg": { "type": "number" },
+        "bodyFatPercent": { "type": "number" },
+        "muscleMassKg": { "type": "number" },
+        "chestCm": { "type": "number" },
+        "waistCm": { "type": "number" },
+        "armsCm": { "type": "number" },
+        "thighsCm": { "type": "number" },
+        "photoTag": { "type": "string", "enum": ["BEFORE", "AFTER", "PROGRESS"] },
+        "photoWebpBase64": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "memberId", "memberName", "recordedAtMillis", "weightKg", "bodyFatPercent", "muscleMassKg", "photoTag", "createdAt", "updatedAt"]
+    },
+    "AttendanceRecord": {
+      "title": "AttendanceRecord",
+      "description": "Member check-in and check-out attendance entry.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "memberId": { "type": "string" },
+        "memberName": { "type": "string" },
+        "membershipId": { "type": "string" },
+        "branchId": { "type": "string" },
+        "method": { "type": "string", "enum": ["QR", "BARCODE", "MANUAL", "BIOMETRIC"] },
+        "checkInMillis": { "type": "integer" },
+        "checkOutMillis": { "type": "integer" },
+        "dateKey": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "memberId", "memberName", "membershipId", "branchId", "method", "checkInMillis", "dateKey", "createdAt", "updatedAt"]
+    },
+    "Trainer": {
+      "title": "Trainer",
+      "description": "Gym trainer profile, salary, specialization, and attendance count.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "mobile": { "type": "string" },
+        "salary": { "type": "integer" },
+        "specialization": { "type": "string" },
+        "branchId": { "type": "string" },
+        "active": { "type": "boolean" },
+        "attendanceDaysThisMonth": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "mobile", "salary", "specialization", "branchId", "active", "attendanceDaysThisMonth", "createdAt", "updatedAt"]
+    },
+    "WorkoutPlan": {
+      "title": "WorkoutPlan",
+      "description": "Structured split workout plan with exercises.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "dayCategory": { "type": "string", "enum": ["CHEST", "BACK", "LEG", "SHOULDER", "ARM", "ABS"] },
+        "title": { "type": "string" },
+        "assignedMemberId": { "type": "string" },
+        "assignedMemberName": { "type": "string" },
+        "exercises": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "dayCategory", "title", "exercises", "createdAt", "updatedAt"]
+    },
+    "DietPlan": {
+      "title": "DietPlan",
+      "description": "Meal plan with calorie and protein targets.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "goal": { "type": "string" },
+        "assignedMemberId": { "type": "string" },
+        "assignedMemberName": { "type": "string" },
+        "breakfast": { "type": "string" },
+        "lunch": { "type": "string" },
+        "snacks": { "type": "string" },
+        "dinner": { "type": "string" },
+        "totalCalories": { "type": "integer" },
+        "totalProteinGrams": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "goal", "breakfast", "lunch", "snacks", "dinner", "totalCalories", "totalProteinGrams", "createdAt", "updatedAt"]
+    },
+    "Supplement": {
+      "title": "Supplement",
+      "description": "Supplement product inventory, sales, and expiry tracking.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string", "enum": ["WHEY_PROTEIN", "MASS_GAINER", "CREATINE", "PRE_WORKOUT", "OTHER"] },
+        "brand": { "type": "string" },
+        "stockQty": { "type": "integer" },
+        "soldQty": { "type": "integer" },
+        "unitPrice": { "type": "integer" },
+        "expiryDateMillis": { "type": "integer" },
+        "branchId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "category", "brand", "stockQty", "soldQty", "unitPrice", "expiryDateMillis", "branchId", "createdAt", "updatedAt"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "Gym operating expense record.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "category": { "type": "string", "enum": ["RENT", "ELECTRICITY", "WATER", "SALARIES", "EQUIPMENT", "MAINTENANCE", "OTHER"] },
+        "title": { "type": "string" },
+        "amount": { "type": "integer" },
+        "expenseDateMillis": { "type": "integer" },
+        "branchId": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "category", "title", "amount", "expenseDateMillis", "branchId", "createdAt", "updatedAt"]
+    },
+    "Equipment": {
+      "title": "Equipment",
+      "description": "Gym equipment inventory and maintenance schedule.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "purchaseDateMillis": { "type": "integer" },
+        "cost": { "type": "integer" },
+        "nextMaintenanceMillis": { "type": "integer" },
+        "condition": { "type": "string", "enum": ["EXCELLENT", "GOOD", "NEEDS_SERVICE", "OUT_OF_ORDER"] },
+        "branchId": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "category", "purchaseDateMillis", "cost", "nextMaintenanceMillis", "condition", "branchId", "createdAt", "updatedAt"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Security and operational audit log.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "action": { "type": "string" },
+        "actorEmail": { "type": "string" },
+        "details": { "type": "string" },
+        "timestampMillis": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "action", "actorEmail", "details", "timestampMillis", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/OwnerProfile" },
+      "description": "Gym owner settings and profile."
+    },
+    "/users/{userId}/branches/{branchId}": {
+      "schema": { "$ref": "#/entities/Branch" },
+      "description": "Multi-branch locations."
+    },
+    "/users/{userId}/members/{memberId}": {
+      "schema": { "$ref": "#/entities/Member" },
+      "description": "Registered gym members and fee schedules."
+    },
+    "/users/{userId}/payments/{paymentId}": {
+      "schema": { "$ref": "#/entities/FeePayment" },
+      "description": "Fee payment receipts."
+    },
+    "/users/{userId}/bodyLogs/{logId}": {
+      "schema": { "$ref": "#/entities/BodyProgressLog" },
+      "description": "Bodybuilder progress measurements and photos."
+    },
+    "/users/{userId}/attendance/{attendanceId}": {
+      "schema": { "$ref": "#/entities/AttendanceRecord" },
+      "description": "Member check-in/out logs."
+    },
+    "/users/{userId}/trainers/{trainerId}": {
+      "schema": { "$ref": "#/entities/Trainer" },
+      "description": "Gym trainers."
+    },
+    "/users/{userId}/workoutPlans/{planId}": {
+      "schema": { "$ref": "#/entities/WorkoutPlan" },
+      "description": "Workout split plans."
+    },
+    "/users/{userId}/dietPlans/{planId}": {
+      "schema": { "$ref": "#/entities/DietPlan" },
+      "description": "Diet and nutrition plans."
+    },
+    "/users/{userId}/supplements/{supplementId}": {
+      "schema": { "$ref": "#/entities/Supplement" },
+      "description": "Supplement inventory and sales."
+    },
+    "/users/{userId}/expenses/{expenseId}": {
+      "schema": { "$ref": "#/entities/Expense" },
+      "description": "Gym expenses."
+    },
+    "/users/{userId}/equipment/{equipmentId}": {
+      "schema": { "$ref": "#/entities/Equipment" },
+      "description": "Gym equipment and maintenance logs."
+    },
+    "/users/{userId}/auditLogs/{logId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "Owner audit trail."
+    }
+  }
+}
